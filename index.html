@@ -112,6 +112,32 @@
       color:var(--fg);
       text-decoration:underline;
     }
+
+    /* --- Ajustes responsive para móviles --- */
+    @media (max-width: 600px) {
+      /* Apilar Título / Temporada / Capítulo */
+      .row {
+        flex-direction: column;
+      }
+      .row .field {
+        width: 100%;
+      }
+      /* VER y Guardar en columna */
+      .buttons-main {
+        grid-template-columns: 1fr !important;
+      }
+      /* Navegación también apilada */
+      .buttons-nav {
+        grid-template-columns: 1fr !important;
+      }
+      /* Búsqueda manual full-width */
+      .manual-search {
+        grid-template-columns: 1fr !important;
+      }
+      #buscar-google {
+        justify-self: start;
+      }
+    }
   </style>
 </head>
 <body>
