@@ -66,8 +66,9 @@
       padding:.4rem .8rem; font-size:.9rem;
     }
 
+    /* VER y Guardar juntos: 3:1 ancho */
     .buttons-main {
-      display:grid; grid-template-columns:1fr; gap:1rem;
+      display:grid; grid-template-columns:3fr 1fr; gap:1rem;
     }
     .buttons-nav {
       display:grid; grid-template-columns:1fr 1fr; gap:1rem;
@@ -94,27 +95,22 @@
       max-width:140px;
     }
 
-    /* --- Ajustes responsive para móviles --- */
-    @media (max-width: 600px) {
-      /* Apilar Título / Temporada / Capítulo */
-      .row {
-        flex-direction: column;
-      }
-      .row .field {
-        width: 100%;
-      }
-      /* Botón VER y navegación en columna */
-      .buttons-main,
-      .buttons-nav {
-        grid-template-columns: 1fr !important;
-      }
-      /* Búsqueda manual y otras etiquetas full-width */
-      .manual-search {
-        grid-template-columns: 1fr !important;
-      }
-      #buscar-google {
-        justify-self: start;
-      }
+    /* Guardadas */
+    .saved-list {
+      margin-top:2rem;
+      background: var(--input-bg);
+      padding:1rem;
+      border-radius:var(--radius);
+    }
+    .saved-list h2 {
+      margin-bottom:.5rem;
+      font-size:1.1rem; color:var(--accent);
+    }
+    .saved-list ul { list-style:none; padding-left:0; }
+    .saved-list li + li { margin-top:.5rem; }
+    .saved-list a {
+      color:var(--fg);
+      text-decoration:underline;
     }
   </style>
 </head>
@@ -163,15 +159,16 @@
         </div>
       </div>
 
-      <!-- BOTÓN VER -->
+      <!-- BOTONES VER y GUARDAR -->
       <div class="buttons-main">
         <button id="abre-primera"><strong>VER</strong></button>
+        <button id="save-search">Guardar</button>
       </div>
 
       <!-- NAVEGACIÓN CAPÍTULO -->
       <div class="buttons-nav">
-        <button id="cap-anterior">Ver capítulo anterior</button>
-        <button id="cap-siguiente">Ver capítulo siguiente</button>
+        <button id="cap-anterior">Capítulo anterior</button>
+        <button id="cap-siguiente">Capítulo siguiente</button>
       </div>
 
       <!-- BÚSQUEDA MANUAL -->
@@ -186,6 +183,12 @@
         <input id="otras" type="text" placeholder="Otras etiquetas" />
       </div>
     </form>
+
+    <!-- LISTA DE BÚSQUEDAS GUARDADAS -->
+    <div class="saved-list" id="savedList" style="display:none;">
+      <h2>Búsquedas guardadas</h2>
+      <ul id="savedUl"></ul>
+    </div>
   </div>
 
   <script>
@@ -333,6 +336,57 @@
     document.querySelectorAll('button').forEach(b => {
       b.addEventListener('click', onBtn);
     });
+
+    // 7) Guardar búsquedas en localStorage
+    const STORAGE_KEY = 'buscaSeriesSaved';
+    function getSaved() {
+      const j = localStorage.getItem(STORAGE_KEY);
+      return j ? JSON.parse(j) : [];
+    }
+    function setSaved(arr) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+    }
+    function saveCurrent() {
+      try {
+        const d = buildData();
+        const url = window.location.pathname +
+          `?titulo=${encodeURIComponent(d.titulo)}` +
+          `&temporada=${d.temporada}` +
+          `&capitulo=${d.capitulo}` +
+          `&site=${encodeURIComponent(d.site)}` +
+          `&other=${encodeURIComponent(d.other)}` +
+          `&lang=${encodeURIComponent(d.lang)}` +
+          `&otras=${encodeURIComponent(d.otras)}`;
+        const saved = getSaved();
+        if (!saved.find(x => x.url === url)) {
+          saved.push({ label: d.query, url });
+          setSaved(saved);
+          renderSaved();
+        }
+      } catch (_) {}
+    }
+    function renderSaved() {
+      const arr = getSaved();
+      const cont = document.getElementById('savedList');
+      const ul = document.getElementById('savedUl');
+      ul.innerHTML = '';
+      if (!arr.length) {
+        cont.style.display = 'none';
+        return;
+      }
+      cont.style.display = 'block';
+      arr.forEach(item => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.textContent = item.label;
+        a.href = item.url;
+        li.appendChild(a);
+        ul.appendChild(li);
+      });
+    }
+    document.getElementById('save-search')
+      .addEventListener('click', saveCurrent);
+    document.addEventListener('DOMContentLoaded', renderSaved);
   </script>
 </body>
 </html>
