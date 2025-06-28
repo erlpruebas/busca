@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Busca series</title>
+  <style>
+    :root {
+      --bg: #121212;
+      --fg: #e0e0e0;
+      --accent: #bb86fc;
+      --input-bg: #1e1e1e;
+      --input-border: #333;
+      --btn-bg: #bb86fc;
+      --btn-hover: #9a67ea;
+      --radius: 8px;
+      --padding: 0.75rem 1.5rem;
+      --font: 'Segoe UI', Roboto, sans-serif;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font);
+      display: flex;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .container { width: 100%; max-width: 480px; }
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+      font-size: 1.8rem;
+      color: var(--accent);
+    }
+    form {
+      display: grid;
+      gap: 1.25rem;
+      background: var(--input-bg);
+      padding: 2rem;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    }
+    .field { display: flex; flex-direction: column; }
+    label { margin-bottom: 0.5rem; font-size: .95rem; }
+    input, select {
+      background: var(--bg);
+      color: var(--fg);
+      border: 1px solid var(--input-border);
+      border-radius: var(--radius);
+      padding: .6rem 1rem;
+      font-size: 1rem;
+      transition: border-color .2s;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    .buttons-main {
+      display: flex;
+      gap: 1rem;
+    }
+    .buttons-nav {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    button {
+      flex: 1;
+      background: var(--btn-bg);
+      color: var(--bg);
+      border: none;
+      border-radius: var(--radius);
+      padding: var(--padding);
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background .2s, transform .1s;
+    }
+    button:hover { background: var(--btn-hover); }
+    button:active { transform: scale(0.98); }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Busca series</h1>
+    <form id="searchForm" onsubmit="return false;">
+      <div class="field">
+        <label for="titulo">Título</label>
+        <input type="text" id="titulo" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label for="temporada">Temporada</label>
+        <select id="temporada">
+          <option>1</option><option>2</option><option>3</option><option>4</option>
+          <option>5</option><option>6</option><option>7</option><option>8</option>
+          <option>9</option><option>10</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="capitulo">Capítulo</label>
+        <select id="capitulo"></select>
+      </div>
+
+      <div class="buttons-main">
+        <button id="buscar-google">Buscar en Google</button>
+        <button id="abre-primera">Abre primera opción</button>
+      </div>
+      <div class="buttons-nav">
+        <button id="cap-anterior">Capítulo anterior</button>
+        <button id="cap-siguiente">Capítulo siguiente</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // 1) Poblamos capítulos (01–20)
+    const capSelect = document.getElementById('capitulo');
+    for (let i = 1; i <= 20; i++) {
+      const v = i.toString().padStart(2,'0');
+      capSelect.add(new Option(v, v));
+    }
+
+    // 2) Leemos params de URL (funciona incluso con file:///)
+    const params      = new URLSearchParams(window.location.search);
+    const pTitulo     = params.get('titulo')    || '';
+    const pTemporada  = params.get('temporada') || '1';
+    const pCapitulo   = params.get('capitulo')  || '01';
+
+    // 3) Rellenamos form
+    document.getElementById('titulo').value    = pTitulo;
+    document.getElementById('temporada').value = pTemporada;
+    document.getElementById('capitulo').value  = pCapitulo;
+
+    // 4) Construye datos
+    function buildData(capOverride) {
+      const t = document.getElementById('titulo').value.trim();
+      if (!t) { alert('Introduce un título.'); throw 'vacío'; }
+      const s       = document.getElementById('temporada').value;
+      const c       = (capOverride !== undefined)
+                    ? capOverride.toString().padStart(2,'0')
+                    : document.getElementById('capitulo').value;
+      return {
+        titulo: t,
+        temporada: s,
+        capitulo: c,
+        numericCap: parseInt(c, 10),
+        query: `${t} ${s}x${c}`
+      };
+    }
+
+    // 5) Recarga con params
+    function updatePage(t, s, c) {
+      const base = window.location.href.split('?')[0];
+      const q    = `?titulo=${encodeURIComponent(t)}`
+                  + `&temporada=${s}&capitulo=${c}`;
+      window.location.href = base + q;
+    }
+
+    // 6) Manejador
+    function handleButton(evt) {
+      try {
+        let data  = buildData();
+        let newCap = data.numericCap;
+        switch(evt.target.id) {
+          case 'buscar-google':
+            window.open(
+              'https://www.google.com/search?q='
+              + encodeURIComponent(data.query),
+              '_blank'
+            );
+            break;
+          case 'abre-primera':
+            window.open(
+              'https://www.google.com/search?q='
+              + encodeURIComponent(data.query)
+              + '&btnI=1',
+              '_blank'
+            );
+            break;
+          case 'cap-anterior':
+            if (data.numericCap > 1) {
+              newCap = data.numericCap - 1;
+              // abrimos primera opción con el nuevo cap
+              const dPrev = buildData(newCap);
+              window.open(
+                'https://www.google.com/search?q='
+                + encodeURIComponent(dPrev.query)
+                + '&btnI=1',
+                '_blank'
+              );
+            }
+            break;
+          case 'cap-siguiente':
+            if (data.numericCap < 20) {
+              newCap = data.numericCap + 1;
+              // abrimos primera opción con el nuevo cap
+              const dNext = buildData(newCap);
+              window.open(
+                'https://www.google.com/search?q='
+                + encodeURIComponent(dNext.query)
+                + '&btnI=1',
+                '_blank'
+              );
+            }
+            break;
+        }
+        // recargamos con el capítulo actualizado
+        const capStr = newCap.toString().padStart(2,'0');
+        updatePage(data.titulo, data.temporada, capStr);
+      } catch (_) {
+        // validación fallida (título vacío), no recargamos
+      }
+    }
+
+    // 7) Asignar a todos los botones
+    document.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', handleButton);
+    });
+  </script>
+
+</body>
+</html>
