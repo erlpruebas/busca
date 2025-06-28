@@ -93,6 +93,29 @@
     #buscar-google {
       max-width:140px;
     }
+
+    /* --- Ajustes responsive para móviles --- */
+    @media (max-width: 600px) {
+      /* Apilar Título / Temporada / Capítulo */
+      .row {
+        flex-direction: column;
+      }
+      .row .field {
+        width: 100%;
+      }
+      /* Botón VER y navegación en columna */
+      .buttons-main,
+      .buttons-nav {
+        grid-template-columns: 1fr !important;
+      }
+      /* Búsqueda manual y otras etiquetas full-width */
+      .manual-search {
+        grid-template-columns: 1fr !important;
+      }
+      #buscar-google {
+        justify-self: start;
+      }
+    }
   </style>
 </head>
 <body>
