@@ -14,207 +14,302 @@
       --btn-bg: #bb86fc;
       --btn-hover: #9a67ea;
       --radius: 8px;
-      --padding: 0.75rem 1.5rem;
+      --padding: 0.75rem;
+      --hpad: 1rem;
       --font: 'Segoe UI', Roboto, sans-serif;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin:0; padding:0; box-sizing:border-box; }
     body {
       background: var(--bg);
       color: var(--fg);
       font-family: var(--font);
-      display: flex;
-      justify-content: center;
-      padding: 2rem;
+      display:flex; justify-content:center;
+      padding:2rem;
     }
-    .container { width: 100%; max-width: 480px; }
+    .container { width:100%; max-width:480px; }
     h1 {
-      text-align: center;
-      margin-bottom: 2rem;
-      font-size: 1.8rem;
-      color: var(--accent);
+      text-align:center; margin-bottom:2rem;
+      font-size:1.8rem; color:var(--accent);
     }
     form {
-      display: grid;
-      gap: 1.25rem;
-      background: var(--input-bg);
-      padding: 2rem;
-      border-radius: var(--radius);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+      display:grid; gap:1.5rem;
+      background:var(--input-bg);
+      padding:2rem; border-radius:var(--radius);
+      box-shadow:0 4px 12px rgba(0,0,0,0.6);
     }
-    .field { display: flex; flex-direction: column; }
-    label { margin-bottom: 0.5rem; font-size: .95rem; }
-    input, select {
-      background: var(--bg);
-      color: var(--fg);
-      border: 1px solid var(--input-border);
-      border-radius: var(--radius);
-      padding: .6rem 1rem;
-      font-size: 1rem;
-      transition: border-color .2s;
+    /* Primera línea */
+    .row {
+      display:flex; gap:1rem;
     }
-    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    .row .field { display:flex; flex-direction:column; }
+    .field.title    { flex:2; }
+    .field.temporada, .field.capitulo { flex:1; }
+    label { margin-bottom:0.5rem; font-size:0.95rem; }
+    input[type="text"], select {
+      background:var(--bg); color:var(--fg);
+      border:1px solid var(--input-border);
+      border-radius:var(--radius);
+      padding:var(--padding) var(--hpad);
+      font-size:1rem; transition:border-color .2s;
+    }
+    input:focus, select:focus { outline:none; border-color:var(--accent); }
+
+    .sources {
+      display:flex; flex-wrap:wrap; gap:.5rem 1rem; align-items:center;
+    }
+    .sources label { display:flex; align-items:center; gap:.3rem; font-size:.9rem; }
+    .sources input[type="text"] {
+      flex:1; max-width:140px;
+      background:var(--bg); color:var(--fg);
+      border:1px solid var(--input-border);
+      border-radius:var(--radius);
+      padding:.4rem .8rem; font-size:.9rem;
+    }
+
     .buttons-main {
-      display: flex;
-      gap: 1rem;
+      display:grid; grid-template-columns:1fr; gap:1rem;
     }
     .buttons-nav {
-      display: flex;
-      gap: 1rem;
-      margin-top: 1rem;
+      display:grid; grid-template-columns:1fr 1fr; gap:1rem;
     }
+    .manual-search {
+      display:grid; grid-template-columns:1fr auto; align-items:center; gap:1rem;
+    }
+    .manual-search p { font-size:.9rem; }
+
+    .otras-section { display:flex; flex-direction:column; gap:.5rem; }
+
     button {
-      flex: 1;
-      background: var(--btn-bg);
-      color: var(--bg);
-      border: none;
-      border-radius: var(--radius);
-      padding: var(--padding);
-      font-size: 1rem;
-      cursor: pointer;
-      transition: background .2s, transform .1s;
+      background:var(--btn-bg); color:var(--bg);
+      border:none; border-radius:var(--radius);
+      cursor:pointer; font-size:1rem; width:100%;
+      padding:var(--padding) var(--hpad);
+      transition:background .2s,transform .1s;
     }
-    button:hover { background: var(--btn-hover); }
-    button:active { transform: scale(0.98); }
+    button:hover { background:var(--btn-hover); }
+    button:active { transform:scale(.98); }
+
+    /* Botón más cuadrado */
+    #buscar-google {
+      max-width:140px;
+    }
   </style>
 </head>
 <body>
 
   <div class="container">
     <h1>Busca series</h1>
-    <form id="searchForm" onsubmit="return false;">
-      <div class="field">
-        <label for="titulo">Título</label>
-        <input type="text" id="titulo" autocomplete="off" />
-      </div>
-      <div class="field">
-        <label for="temporada">Temporada</label>
-        <select id="temporada">
-          <option>1</option><option>2</option><option>3</option><option>4</option>
-          <option>5</option><option>6</option><option>7</option><option>8</option>
-          <option>9</option><option>10</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="capitulo">Capítulo</label>
-        <select id="capitulo"></select>
+    <form onsubmit="return false;">
+
+      <!-- PRIMERA LÍNEA: TÍTULO / TEMPORADA / CAPÍTULO -->
+      <div class="row">
+        <div class="field title">
+          <label for="titulo">Título</label>
+          <input id="titulo" type="text" autocomplete="off" />
+        </div>
+        <div class="field temporada">
+          <label for="temporada">Temporada</label>
+          <select id="temporada">
+            <option>1</option><option>2</option><option>3</option><option>4</option>
+            <option>5</option><option>6</option><option>7</option><option>8</option>
+            <option>9</option><option>10</option>
+          </select>
+        </div>
+        <div class="field capitulo">
+          <label for="capitulo">Capítulo</label>
+          <select id="capitulo"></select>
+        </div>
       </div>
 
-      <div class="buttons-main">
-        <button id="buscar-google">Buscar en Google</button>
-        <button id="abre-primera">Abre primera opción</button>
+      <!-- SELECCIÓN SITIO -->
+      <div class="field">
+        <div class="sources">
+          <label><input type="radio" name="site" value="tokyvideo" /> tokyvideo</label>
+          <label><input type="radio" name="site" value="ok.ru" /> ok.ru</label>
+          <label><input type="radio" name="site" value="other" id="site-other-radio" /> Otra:</label>
+          <input type="text" id="site-other-input" placeholder="ejemplo.com" disabled />
+        </div>
       </div>
+
+      <!-- SELECCIÓN IDIOMA -->
+      <div class="field">
+        <div class="sources">
+          <label><input type="radio" name="lang" value="castellano" /> Castellano</label>
+          <label><input type="radio" name="lang" value="latino" /> Latino</label>
+          <label><input type="radio" name="lang" value="vo" /> VO</label>
+        </div>
+      </div>
+
+      <!-- BOTÓN VER -->
+      <div class="buttons-main">
+        <button id="abre-primera"><strong>VER</strong></button>
+      </div>
+
+      <!-- NAVEGACIÓN CAPÍTULO -->
       <div class="buttons-nav">
         <button id="cap-anterior">Capítulo anterior</button>
         <button id="cap-siguiente">Capítulo siguiente</button>
+      </div>
+
+      <!-- BÚSQUEDA MANUAL -->
+      <div class="manual-search">
+        <p>Si tienes problemas con el resultado, busca manualmente</p>
+        <button id="buscar-google">Buscar en Google</button>
+      </div>
+
+      <!-- OTRAS ETIQUETAS -->
+      <div class="otras-section">
+        <label for="otras">Aquí puedes añadir otras etiquetas para mejorar tu búsqueda</label>
+        <input id="otras" type="text" placeholder="Otras etiquetas" />
       </div>
     </form>
   </div>
 
   <script>
-    // 1) Poblamos capítulos (01–20)
+    // 1) Poblamos capítulos 01–20
     const capSelect = document.getElementById('capitulo');
     for (let i = 1; i <= 20; i++) {
       const v = i.toString().padStart(2,'0');
       capSelect.add(new Option(v, v));
     }
 
-    // 2) Leemos params de URL (funciona incluso con file:///)
-    const params      = new URLSearchParams(window.location.search);
-    const pTitulo     = params.get('titulo')    || '';
-    const pTemporada  = params.get('temporada') || '1';
-    const pCapitulo   = params.get('capitulo')  || '01';
+    // 2) Leemos parámetros de URL
+    const params = new URLSearchParams(window.location.search);
+    const init = {
+      titulo:    params.get('titulo')    || '',
+      temporada: params.get('temporada') || '1',
+      capitulo:  params.get('capitulo')  || '01',
+      site:      params.get('site')      || '',
+      other:     params.get('other')     || '',
+      lang:      params.get('lang')      || '',
+      otras:     params.get('otras')     || ''
+    };
 
-    // 3) Rellenamos form
-    document.getElementById('titulo').value    = pTitulo;
-    document.getElementById('temporada').value = pTemporada;
-    document.getElementById('capitulo').value  = pCapitulo;
+    // 3) Rellenamos formulario
+    document.getElementById('titulo').value    = init.titulo;
+    document.getElementById('temporada').value = init.temporada;
+    document.getElementById('capitulo').value  = init.capitulo;
+    if (init.site) {
+      const sr = document.querySelector(`input[name="site"][value="${init.site}"]`);
+      if (sr) sr.checked = true;
+      if (init.site === 'other') {
+        const oi = document.getElementById('site-other-input');
+        oi.disabled = false; oi.value = init.other;
+      }
+    }
+    if (init.lang) {
+      const lr = document.querySelector(`input[name="lang"][value="${init.lang}"]`);
+      if (lr) lr.checked = true;
+    }
+    document.getElementById('otras').value = init.otras;
 
-    // 4) Construye datos
+    // Toggle “Otra” sitio
+    const otherRadio = document.getElementById('site-other-radio');
+    const otherInput = document.getElementById('site-other-input');
+    otherRadio.addEventListener('change', () => {
+      otherInput.disabled = !otherRadio.checked;
+      if (!otherRadio.checked) otherInput.value = '';
+    });
+    if (otherRadio.checked) otherInput.disabled = false;
+
+    // 4) Construir datos y query
     function buildData(capOverride) {
       const t = document.getElementById('titulo').value.trim();
-      if (!t) { alert('Introduce un título.'); throw 'vacío'; }
-      const s       = document.getElementById('temporada').value;
-      const c       = (capOverride !== undefined)
-                    ? capOverride.toString().padStart(2,'0')
-                    : document.getElementById('capitulo').value;
+      if (!t) { alert('Introduce un título'); throw ''; }
+      const s = document.getElementById('temporada').value;
+      const c = capOverride !== undefined
+                ? capOverride.toString().padStart(2,'0')
+                : document.getElementById('capitulo').value;
+      // sitio
+      const selSite = document.querySelector('input[name="site"]:checked');
+      let siteFrag = selSite 
+        ? (selSite.value === 'other'
+            ? otherInput.value.trim()
+            : selSite.value)
+        : '';
+      // idioma
+      const selLang = document.querySelector('input[name="lang"]:checked');
+      let langFrag = selLang ? selLang.value : '';
+      // otras etiquetas
+      const otras = document.getElementById('otras').value.trim();
+      // montamos la query
+      let q = `${t} ${s}x${c}`;
+      if (siteFrag) q += ' ' + siteFrag;
+      if (langFrag) q += ' ' + langFrag;
+      if (otras)     q += ' ' + otras;
       return {
         titulo: t,
         temporada: s,
         capitulo: c,
-        numericCap: parseInt(c, 10),
-        query: `${t} ${s}x${c}`
+        site: selSite ? selSite.value : '',
+        other: otherInput.value.trim(),
+        lang: selLang ? selLang.value : '',
+        otras,
+        query: q
       };
     }
 
-    // 5) Recarga con params
-    function updatePage(t, s, c) {
+    // 5) Recarga la página con parámetros
+    function updatePage(data) {
       const base = window.location.href.split('?')[0];
-      const q    = `?titulo=${encodeURIComponent(t)}`
-                  + `&temporada=${s}&capitulo=${c}`;
-      window.location.href = base + q;
+      const qs = `?titulo=${encodeURIComponent(data.titulo)}` +
+                 `&temporada=${data.temporada}` +
+                 `&capitulo=${data.capitulo}` +
+                 `&site=${encodeURIComponent(data.site)}` +
+                 `&other=${encodeURIComponent(data.other)}` +
+                 `&lang=${encodeURIComponent(data.lang)}` +
+                 `&otras=${encodeURIComponent(data.otras)}`;
+      window.location.href = base + qs;
     }
 
-    // 6) Manejador
-    function handleButton(evt) {
+    // 6) Manejador de botones
+    function onBtn(evt) {
       try {
-        let data  = buildData();
-        let newCap = data.numericCap;
-        switch(evt.target.id) {
-          case 'buscar-google':
-            window.open(
-              'https://www.google.com/search?q='
-              + encodeURIComponent(data.query),
-              '_blank'
-            );
-            break;
-          case 'abre-primera':
-            window.open(
-              'https://www.google.com/search?q='
-              + encodeURIComponent(data.query)
-              + '&btnI=1',
-              '_blank'
-            );
-            break;
-          case 'cap-anterior':
-            if (data.numericCap > 1) {
-              newCap = data.numericCap - 1;
-              // abrimos primera opción con el nuevo cap
-              const dPrev = buildData(newCap);
-              window.open(
-                'https://www.google.com/search?q='
-                + encodeURIComponent(dPrev.query)
-                + '&btnI=1',
-                '_blank'
-              );
-            }
-            break;
-          case 'cap-siguiente':
-            if (data.numericCap < 20) {
-              newCap = data.numericCap + 1;
-              // abrimos primera opción con el nuevo cap
-              const dNext = buildData(newCap);
-              window.open(
-                'https://www.google.com/search?q='
-                + encodeURIComponent(dNext.query)
-                + '&btnI=1',
-                '_blank'
-              );
-            }
-            break;
+        let data = buildData();
+        let num = parseInt(data.capitulo, 10);
+        const id = evt.target.id;
+        if (id === 'abre-primera') {
+          window.open(
+            'https://www.google.com/search?q=' +
+            encodeURIComponent(data.query) +
+            '&btnI=1',
+            '_blank'
+          );
         }
-        // recargamos con el capítulo actualizado
-        const capStr = newCap.toString().padStart(2,'0');
-        updatePage(data.titulo, data.temporada, capStr);
+        if (id === 'cap-anterior' && num > 1) {
+          num--; data = buildData(num);
+          window.open(
+            'https://www.google.com/search?q=' +
+            encodeURIComponent(data.query) +
+            '&btnI=1',
+            '_blank'
+          );
+        }
+        if (id === 'cap-siguiente' && num < 20) {
+          num++; data = buildData(num);
+          window.open(
+            'https://www.google.com/search?q=' +
+            encodeURIComponent(data.query) +
+            '&btnI=1',
+            '_blank'
+          );
+        }
+        if (id === 'buscar-google') {
+          window.open(
+            'https://www.google.com/search?q=' +
+            encodeURIComponent(data.query),
+            '_blank'
+          );
+        }
+        updatePage(data);
       } catch (_) {
-        // validación fallida (título vacío), no recargamos
+        // validación fallida
       }
     }
 
-    // 7) Asignar a todos los botones
-    document.querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('click', handleButton);
+    document.querySelectorAll('button').forEach(b => {
+      b.addEventListener('click', onBtn);
     });
   </script>
-
 </body>
 </html>
