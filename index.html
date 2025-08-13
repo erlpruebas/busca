@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Busca series</title>
+  <title>Busca Busca</title>
   <style>
     :root {
       --bg: #121212;
@@ -41,7 +41,7 @@
     .row {
       display:flex; gap:1rem;
     }
-    .row .field { display:flex; flex-direction:column; }
+    .row .field { display:flex; flex-direction:column; min-width:0; }
     .field.title    { flex:2; }
     .field.temporada, .field.capitulo { flex:1; }
     label { margin-bottom:0.5rem; font-size:0.95rem; }
@@ -52,6 +52,7 @@
       padding:var(--padding) var(--hpad);
       font-size:1rem; transition:border-color .2s;
     }
+    .field input, .field select { width:100%; }
     input:focus, select:focus { outline:none; border-color:var(--accent); }
 
     .sources {
@@ -138,13 +139,36 @@
         justify-self: start;
       }
     }
+  .mode-switch {
+    display:flex; gap:1rem; justify-content:center; margin-bottom:1rem;
+  }
+  .mode-switch button {
+    max-width:160px;
+  }
+  .mode-switch .active {
+    background: var(--btn-hover);
+  }
+  .layout { display:block; }
+    .field.year { flex:1; min-width:0; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .trending { position:static; } }
+  .debug {
+    margin-top:1rem; background:#0f172a; color:#cbd5e1; padding:1rem; border-radius:var(--radius);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size:.85rem; white-space:pre-wrap; word-break:break-word; max-height:240px; overflow:auto;
+  }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <h1>Busca series</h1>
-    <form onsubmit="return false;">
+    <h1>Busca Busca</h1>
+    <div class="mode-switch">
+      <button id="btn-mode-series">Series</button>
+      <button id="btn-mode-movies">Películas</button>
+    </div>
+    <div class="layout">
+      <div>
+        <form onsubmit="return false;">
 
       <!-- PRIMERA LÍNEA: TÍTULO / TEMPORADA / CAPÍTULO -->
       <div class="row">
@@ -163,6 +187,10 @@
         <div class="field capitulo">
           <label for="capitulo">Capítulo</label>
           <select id="capitulo"></select>
+        </div>
+         <div class="field year" id="year-field" style="display:none; min-width:0;">
+          <label for="anio">Año</label>
+          <input id="anio" type="text" autocomplete="off" placeholder="Año" />
         </div>
       </div>
 
@@ -192,7 +220,7 @@
       </div>
 
       <!-- NAVEGACIÓN CAPÍTULO -->
-      <div class="buttons-nav">
+      <div class="buttons-nav" id="nav-capitulos">
         <button id="cap-anterior">Ver capítulo anterior</button>
         <button id="cap-siguiente">Ver capítulo siguiente</button>
       </div>
@@ -208,12 +236,14 @@
         <label for="otras">Aquí puedes añadir otras etiquetas para mejorar tu búsqueda</label>
         <input id="otras" type="text" placeholder="Otras etiquetas" />
       </div>
-    </form>
+        </form>
 
-    <!-- LISTA DE BÚSQUEDAS GUARDADAS -->
-    <div class="saved-list" id="savedList" style="display:none;">
-      <h2>Búsquedas guardadas</h2>
-      <ul id="savedUl"></ul>
+        <!-- LISTA DE BÚSQUEDAS GUARDADAS -->
+        <div class="saved-list" id="savedList" style="display:none;">
+          <h2>Búsquedas guardadas</h2>
+          <ul id="savedUl"></ul>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -234,13 +264,16 @@
       site:      params.get('site')      || '',
       other:     params.get('other')     || '',
       lang:      params.get('lang')      || '',
-      otras:     params.get('otras')     || ''
+      otras:     params.get('otras')     || '',
+      mode:      (params.get('mode') || localStorage.getItem('buscaMode') || 'series'),
+      year:      params.get('year') || ''
     };
 
     // 3) Rellenamos formulario
     document.getElementById('titulo').value    = init.titulo;
     document.getElementById('temporada').value = init.temporada;
     document.getElementById('capitulo').value  = init.capitulo;
+    document.getElementById('anio').value      = init.year;
     if (init.site) {
       const sr = document.querySelector(`input[name="site"][value="${init.site}"]`);
       if (sr) sr.checked = true;
@@ -264,6 +297,24 @@
     });
     if (otherRadio.checked) otherInput.disabled = false;
 
+    // Modo actual y UI
+    let currentMode = (init.mode === 'movies') ? 'movies' : 'series';
+    const seriesBtn = document.getElementById('btn-mode-series');
+    const moviesBtn = document.getElementById('btn-mode-movies');
+    function applyModeUI() {
+      // botones activos
+      seriesBtn.classList.toggle('active', currentMode==='series');
+      moviesBtn.classList.toggle('active', currentMode==='movies');
+      // campos visibles
+      document.querySelector('.field.temporada').style.display = currentMode==='series' ? '' : 'none';
+      document.querySelector('.field.capitulo').style.display  = currentMode==='series' ? '' : 'none';
+      document.getElementById('nav-capitulos').style.display   = currentMode==='series' ? 'grid' : 'none';
+      document.getElementById('year-field').style.display      = currentMode==='movies' ? '' : 'none';
+    }
+    applyModeUI();
+    seriesBtn.addEventListener('click', () => { currentMode='series'; persistModeAndReload(false); });
+    moviesBtn.addEventListener('click', () => { currentMode='movies'; persistModeAndReload(false); });
+
     // 4) Construir datos y query
     function buildData(capOverride) {
       const t = document.getElementById('titulo').value.trim();
@@ -272,6 +323,7 @@
       const c = capOverride !== undefined
                 ? capOverride.toString().padStart(2,'0')
                 : document.getElementById('capitulo').value;
+      const y = (document.getElementById('anio').value || '').trim();
       // sitio
       const selSite = document.querySelector('input[name="site"]:checked');
       let siteFrag = selSite 
@@ -285,7 +337,12 @@
       // otras etiquetas
       const otras = document.getElementById('otras').value.trim();
       // montamos la query
-      let q = `${t} ${s}x${c}`;
+      let q = '';
+      if (currentMode === 'series') {
+        q = `${t} ${s}x${c}`;
+      } else {
+        q = `${t}${y ? ' ' + y : ''}`;
+      }
       if (siteFrag) q += ' ' + siteFrag;
       if (langFrag) q += ' ' + langFrag;
       if (otras)     q += ' ' + otras;
@@ -293,11 +350,13 @@
         titulo: t,
         temporada: s,
         capitulo: c,
+        year: y,
         site: selSite ? selSite.value : '',
         other: otherInput.value.trim(),
         lang: selLang ? selLang.value : '',
         otras,
-        query: q
+        query: q,
+        mode: currentMode
       };
     }
 
@@ -307,11 +366,28 @@
       const qs = `?titulo=${encodeURIComponent(data.titulo)}` +
                  `&temporada=${data.temporada}` +
                  `&capitulo=${data.capitulo}` +
+                 `&year=${encodeURIComponent(data.year || '')}` +
                  `&site=${encodeURIComponent(data.site)}` +
                  `&other=${encodeURIComponent(data.other)}` +
                  `&lang=${encodeURIComponent(data.lang)}` +
-                 `&otras=${encodeURIComponent(data.otras)}`;
+                 `&otras=${encodeURIComponent(data.otras)}` +
+                 `&mode=${encodeURIComponent(data.mode)}`;
       window.location.href = base + qs;
+    }
+
+    function persistModeAndReload(reload=true) {
+      localStorage.setItem('buscaMode', currentMode);
+      if (reload) {
+        try {
+          const data = buildData();
+          data.mode = currentMode;
+          updatePage(data);
+        } catch (_) {
+          applyModeUI();
+        }
+      } else {
+        applyModeUI();
+      }
     }
 
     // 6) Manejador de botones
@@ -328,7 +404,7 @@
             '_blank'
           );
         }
-        if (id === 'cap-anterior' && num > 1) {
+        if (id === 'cap-anterior' && currentMode==='series' && num > 1) {
           num--; data = buildData(num);
           window.open(
             'https://www.google.com/search?q=' +
@@ -337,7 +413,7 @@
             '_blank'
           );
         }
-        if (id === 'cap-siguiente' && num < 20) {
+        if (id === 'cap-siguiente' && currentMode==='series' && num < 20) {
           num++; data = buildData(num);
           window.open(
             'https://www.google.com/search?q=' +
@@ -360,7 +436,9 @@
     }
 
     document.querySelectorAll('button').forEach(b => {
-      b.addEventListener('click', onBtn);
+      if (b.id !== 'btn-mode-series' && b.id !== 'btn-mode-movies') {
+        b.addEventListener('click', onBtn);
+      }
     });
 
     // 7) Guardar búsquedas en localStorage
@@ -379,10 +457,12 @@
           `?titulo=${encodeURIComponent(d.titulo)}` +
           `&temporada=${d.temporada}` +
           `&capitulo=${d.capitulo}` +
+          `&year=${encodeURIComponent(d.year || '')}` +
           `&site=${encodeURIComponent(d.site)}` +
           `&other=${encodeURIComponent(d.other)}` +
           `&lang=${encodeURIComponent(d.lang)}` +
-          `&otras=${encodeURIComponent(d.otras)}`;
+          `&otras=${encodeURIComponent(d.otras)}` +
+          `&mode=${encodeURIComponent(d.mode)}`;
         const saved = getSaved();
         if (!saved.find(x => x.url === url)) {
           saved.push({ label: d.query, url });
@@ -413,6 +493,8 @@
     document.getElementById('save-search')
       .addEventListener('click', saveCurrent);
     document.addEventListener('DOMContentLoaded', renderSaved);
+
+    // fin: sin llamadas a APIs externas
   </script>
 </body>
 </html>
